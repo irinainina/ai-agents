@@ -2,10 +2,13 @@
 
 import { useState, useRef, useEffect } from "react";
 import styles from "./AgentSection.module.css";
+import { useAIModel } from "../../app/AIModelContext";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 export default function AgentSection({ agentType, title, description }) {
+  const { model } = useAIModel(); 
+
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
 
@@ -22,7 +25,7 @@ export default function AgentSection({ agentType, title, description }) {
       const res = await fetch(`${apiUrl}/api/${agentType}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed }),
+        body: JSON.stringify({ message: trimmed, model }),
       });
 
       const data = await res.json();

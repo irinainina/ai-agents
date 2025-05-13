@@ -1,0 +1,19 @@
+.selector {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: 40px;
+}
+
+.selector label {
+  font-weight: bold;
+}
+
+.selector select {
+  padding: 0.3rem 0.5rem;
+  font-size: 1rem;
+}
