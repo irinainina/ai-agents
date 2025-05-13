@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 class BaseAgent:
     def __init__(self, name, description, avatar="default_avatar.png"):
 
