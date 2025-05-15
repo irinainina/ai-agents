@@ -1,29 +1,44 @@
 import os
 import requests
 from dotenv import load_dotenv
+from langdetect import detect
+from data.language_map import LANGUAGE_INSTRUCTIONS
 
 load_dotenv()
 
 class BaseAgent:
     def __init__(self, name, description, avatar="default_avatar.png"):
-
         self.name = name
         self.description = description
         self.avatar = avatar
         self.api_key = os.getenv("GROQ_API_KEY")
 
-    def get_response(self, query, stream=False):
-
+    def detect_language_instruction(self, query):
         try:
+            lang = detect(query)
+        except Exception:
+            lang = "en"
+
+        return LANGUAGE_INSTRUCTIONS.get(lang, "Respond in the same language as the question.")
+
+    def get_response(self, query, model="llama3-8b-8192", stream=False):
+        try:
+            language_instruction = self.detect_language_instruction(query)
+
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json"
             }
 
+            system_prompt = (
+                f"You are {self.name}, {self.description}. "
+                f"{language_instruction} Be helpful, concise, and professional."
+            )
+
             data = {
-                "model": "llama3-8b-8192",
+                "model": model,
                 "messages": [
-                    {"role": "system", "content": f"You are {self.name}, {self.description}. Respond in a helpful, concise, and professional manner."},
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": query}
                 ],
                 "temperature": 0.7,
@@ -44,6 +59,5 @@ class BaseAgent:
         except Exception as e:
             return f"An error occurred: {str(e)}"
 
-    def print_response(self, query, stream=True):
-
-        return self.get_response(query, stream=False)
+    def print_response(self, query, model="llama3-8b-8192", stream=True):
+        return self.get_response(query, model=model, stream=False)
