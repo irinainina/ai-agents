@@ -1,0 +1,81 @@
+{
+  "client": {
+    "intro": "Halo Lab creates digital products that help businesses grow",
+    "key_points": [
+      "600+ successful projects since 2013",
+      "End-to-end solutions: design → development → marketing",
+      "Average client rating: 4.9/5 (80+ reviews)",
+      "Offices in New York and Dubai for global service"
+    ],
+    "services": [
+      "UI/UX design",
+      "Web development",
+      "Mobile applications",
+      "SEO and content marketing",
+      "Product Hunt launches"
+    ],
+    "achievements": [
+      "WeSpire: +35% traffic, -20% bounce rate after redesign",
+      "HomeQ: 67% annual growth → acquired for $7B",
+      "Linkbycar: Secured €1.4M investment",
+      "ASI: Processed 4M+ student requests"
+    ]
+  },
+
+  "designer": {
+    "intro": "Where creativity meets visual innovation",
+    "key_points": [
+      "#1 in Dribbble trends",
+      "Awwwards/CSSDA winner",
+      "Top UX/UI studio in Ukraine (Clutch)",
+      "Experimental UX/UI approaches"
+    ],
+    "services": ["UI/UX design", "Web/mobile design", "Landing page design", "Branding and identity", "Design systems"],
+    "achievements": [
+      "Design-driven development philosophy",
+      "Deep UX research practices",
+      "Data-driven design solutions",
+      "Regular workshops and art direction"
+    ]
+  },
+
+  "developer": {
+    "intro": "Engineering excellence and modern technologies",
+    "key_points": [
+      "Tech stack: React/Vue, Node.js, React Native",
+      "Headless CMS: Webflow/Sanity/Prismic",
+      "Cloud: AWS/Azure",
+      "Testing: Cypress/Jest/Selenium"
+    ],
+    "services": [
+      "Web development (Jamstack)",
+      "Mobile applications",
+      "SaaS solutions",
+      "CMS integrations",
+      "Performance optimization"
+    ],
+    "achievements": [
+      "Webflow projects with complex animations",
+      "B2B products for 1M+ users",
+      "Automated CI/CD pipelines",
+      "Open-source community contributions"
+    ]
+  },
+
+  "other": {
+    "intro": "Halo Lab - digital product design and development studio",
+    "key_points": [
+      "Founded in 2013 (Odesa)",
+      "Offices: New York, Dubai",
+      "130+ specialists",
+      "500+ completed projects"
+    ],
+    "services": ["UI/UX design", "Web and mobile development", "Branding and marketing", "Technical consulting"],
+    "achievements": [
+      "Top 1 UX/UI studio in Ukraine (Clutch)",
+      "4.9/5 based on 80+ reviews",
+      "Official Webflow design partner",
+      "Projects for US, EU and Middle East clients"
+    ]
+  }
+}

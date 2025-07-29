@@ -1,87 +1,99 @@
-from agents.base_agent import BaseAgent
+import os
+import json
+import numpy as np
+from pathlib import Path
+from langdetect import detect, DetectorFactory
+from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer
 
+DetectorFactory.seed = 0
 
-class ProjectAgent(BaseAgent):
-    def __init__(self):
-        super().__init__(
-            name="TechExpert",
-            description="I'm the project specialist. I can provide detailed information about any project in this portfolio.",
-            avatar="project_avatar.png"
+class ProjectAgent:
+    def __init__(self, default_model="llama3-8b-8192"):
+        self.default_model = default_model
+        self.projects = self._load_projects()
+        self.embedder = SentenceTransformer("all-MiniLM-L6-v2")
+        self.project_embeddings = self._generate_project_embeddings()
+
+    def _load_projects(self):
+        data_dir = Path(__file__).parent.parent / "data"
+        file_path = data_dir / "projects.json"
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading project data: {e}")
+            return []
+
+    def _detect_language(self, text):
+        try:
+            return detect(text)
+        except:
+            return "en"
+
+    def _generate_project_embeddings(self):
+        texts = [proj.get("name", "") + " " + proj.get("text", "") for proj in self.projects]
+        return self.embedder.encode(texts, convert_to_tensor=True)
+
+    def _find_similar_projects(self, query, top_n=3):
+        query_embedding = self.embedder.encode(query, convert_to_tensor=True)
+        similarities = cosine_similarity(
+            [query_embedding.cpu().numpy()],
+            self.project_embeddings.cpu().numpy()
+        )[0]
+        top_indices = np.argsort(similarities)[::-1][:top_n]
+        return [self.projects[i] for i in top_indices]
+
+    def _format_project_promo(self, projects):
+        result = ["Here are some of our most relevant projects:"]
+        for proj in projects:
+            result.append(
+                f"• **{proj['name']}** — {proj['slogan']}\n"
+                f"  Industry: {', '.join(proj['industry'])}\n"
+                f"  Services: {', '.join(proj['services'])}\n"
+                f"  Timeline: {proj['timeline']}\n"
+                f"  Description: {proj['description']}\n"
+                f"  [View case study]({proj['link']})\n"
+            )
+        return "\n".join(result)
+
+    def get_response(self, query, model=None, chat_history=None):
+        model = model or self.default_model
+        lang = self._detect_language(query)
+        similar_projects = self._find_similar_projects(query)
+
+        promo_text = self._format_project_promo(similar_projects)
+
+        system_prompt = (
+            f"You are a sales assistant at Halo Lab. The user speaks {lang}. "
+            f"Your goal is to promote similar projects from our portfolio to convince the client we have experience in their domain. "
+            f"Use short, persuasive language. Structure the answer with bullets or paragraphs.\n\n"
+            f"USER QUERY: {query}\n\n"
+            f"{promo_text}"
         )
 
-        self.projects = {
-            "project1": {
-                "name": "E-commerce Platform",
-                "tech_stack": ["React", "Node.js", "MongoDB", "Express"],
-                "description": "A full-stack e-commerce platform with user authentication, product catalog, shopping cart, and payment processing.",
-                "highlights": ["Responsive design", "RESTful API", "Stripe integration", "JWT authentication"],
-                "github_link": "https://github.com/username/ecommerce-platform",
-                "demo_link": "https://ecommerce-demo.example.com"
-            },
-            "project2": {
-                "name": "Task Management App",
-                "tech_stack": ["Vue.js", "Firebase", "Tailwind CSS"],
-                "description": "A real-time task management application with collaborative features, notifications, and progress tracking.",
-                "highlights": ["Real-time updates", "User collaboration", "Drag-and-drop interface", "Progressive Web App"],
-                "github_link": "https://github.com/username/task-manager",
-                "demo_link": "https://taskmanager-demo.example.com"
-            },
-            "project3": {
-                "name": "Data Visualization Dashboard",
-                "tech_stack": ["Python", "Django", "D3.js", "PostgreSQL"],
-                "description": "An interactive dashboard for visualizing complex datasets with filtering, sorting, and export capabilities.",
-                "highlights": ["Interactive charts", "Data filtering", "CSV/PDF export", "Responsive design"],
-                "github_link": "https://github.com/username/data-dashboard",
-                "demo_link": "https://dataviz-demo.example.com"
+        messages = []
+        if chat_history:
+            messages += chat_history
+        messages.insert(0, {"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": query})
+
+        try:
+            import requests
+            headers = {"Authorization": f"Bearer {os.getenv('GROQ_API_KEY')}"}
+            payload = {
+                "model": model,
+                "messages": messages,
+                "temperature": 0.5,
+                "max_tokens": 800
             }
-        }
 
-    def get_project_list(self):
-
-        project_list = "# Available Projects\n\n"
-        for project_id, project in self.projects.items():
-            project_list += f"## {project['name']}\n"
-            project_list += f"**Tech Stack**: {', '.join(project['tech_stack'])}\n"
-            project_list += f"{project['description']}\n\n"
-
-        return project_list
-
-    def get_project_details(self, project_id):
-
-        if project_id in self.projects:
-            project = self.projects[project_id]
-            prompt = f"""
-            Generate a detailed description for the following project:
-
-            Project Name: {project['name']}
-            Tech Stack: {', '.join(project['tech_stack'])}
-            Description: {project['description']}
-            Highlights: {', '.join(project['highlights'])}
-            GitHub: {project['github_link']}
-            Demo: {project['demo_link']}
-
-            Include technical details about implementation challenges and solutions. Format the response in markdown.
-            """
-            return self.get_response(prompt)
-        else:
-            return "Project not found. Please check the project ID and try again."
-
-    def answer_technical_question(self, project_id, question):
-
-        if project_id in self.projects:
-            project = self.projects[project_id]
-            prompt = f"""
-            Answer the following technical question about this project:
-
-            Project Name: {project['name']}
-            Tech Stack: {', '.join(project['tech_stack'])}
-            Description: {project['description']}
-            Highlights: {', '.join(project['highlights'])}
-
-            Question: {question}
-
-            Provide a detailed technical answer with code examples if relevant.
-            """
-            return self.get_response(prompt)
-        else:
-            return "Project not found. Please check the project ID and try again."
+            response = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=20
+            )
+            return response.json()["choices"][0]["message"]["content"]
+        except Exception as e:
+            return f"Error: {str(e)}"
