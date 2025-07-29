@@ -9,3 +9,5 @@ langdetect==1.0.9
 gunicorn
 ddgs==9.0.0
 langid==1.1.6
+sentence-transformers==2.2.2
+scikit-learn==1.4.2
