@@ -102,7 +102,9 @@ export default function AgentSection({ agentType }) {
 
   const handleNewChat = () => {
     setMessages([]);
+    setProjectIds([]);
     localStorage.removeItem(`${agentType}_history`);
+    localStorage.removeItem(`${agentType}_projects`);
   };
 
   useEffect(() => {
