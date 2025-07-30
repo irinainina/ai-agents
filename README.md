@@ -1,12 +1,14 @@
 # ai-agents
 
+AI-агенты для демонстрации кейсов Halo Lab на основе пользовательского запроса.
+
 ## Installation
 
 ### 1. Clone this repository
 
 ```shell
 git clone https://github.com/irinainina/ai-agents
-cd ai-agent-app
+cd ai-agents
 ```
 
 ### 2. Set up environment variables
@@ -24,10 +26,13 @@ You can get a Groq API key by signing up at [GroqCloud](https://console.groq.com
 ```shell
 # Create a Python virtual environment
 python -m venv venv
-source venv/Scripts/activate
+source venv/Scripts/activate  # or source venv/bin/activate on macOS/Linux
 
 # Install Python dependencies
 pip install -r requirements.txt
+
+# Generate project embeddings (one-time step)
+python backend/generate_embeddings.py
 
 # Start the Flask server
 cd backend
@@ -55,4 +60,9 @@ The frontend will be available at [http://localhost:3000](http://localhost:3000)
 
 ## Usage
 
-Once both the backend and frontend are running
+Once both the backend and frontend are running, open [http://localhost:3000](http://localhost:3000) in your browser and start chatting with the AI agents.
+
+## Notes
+
+* The `project_embeddings.pt` file is generated once and reused to improve performance.
+* You can update it by running `python backend/generate_embeddings.py` again after editing `projects.json`.
