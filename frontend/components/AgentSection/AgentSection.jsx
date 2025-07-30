@@ -5,6 +5,7 @@ import Image from "next/image";
 import styles from "./AgentSection.module.css";
 import { useAIModel } from "../../app/AIModelContext";
 import agentConfig from "../../data/agentConfig";
+import ProjectCards from "../ProjectCards/ProjectCards";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 const supportedLanguages = ["en", "ru", "uk"];
@@ -24,10 +25,12 @@ export default function AgentSection({ agentType }) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [lang, setLang] = useState("en");
+  const [projectIds, setProjectIds] = useState([]);
+
   const chatRef = useRef(null);
   const prevModelRef = useRef(model);
   const prevAgentTypeRef = useRef(agentType);
-
+  
   useEffect(() => {
     const initialLang = detectLanguage();
     setLang(initialLang);
@@ -38,6 +41,10 @@ export default function AgentSection({ agentType }) {
     if (savedHistory && savedHistory !== "undefined") {
       const parsed = JSON.parse(savedHistory);
       setMessages(parsed);
+    }
+    const savedProjects = localStorage.getItem(`${agentType}_projects`);
+    if (agentType === "project" && savedProjects && savedProjects !== "undefined") {
+      setProjectIds(JSON.parse(savedProjects));
     }
   }, [agentType]);
 
@@ -67,10 +74,20 @@ export default function AgentSection({ agentType }) {
       });
 
       const data = await res.json();
+
       if (data?.response) {
         const updated = [...messages, { role: "user", text: trimmed }, { role: "agent", text: data.response }];
+
         setMessages(updated);
         localStorage.setItem(`${agentType}_history`, JSON.stringify(updated));
+
+        if (agentType === "project" && Array.isArray(data.project_ids)) {
+          setProjectIds(data.project_ids);
+          localStorage.setItem(`${agentType}_projects`, JSON.stringify(data.project_ids));
+        } else {
+          setProjectIds([]);
+          localStorage.removeItem(`${agentType}_projects`);
+        }
       }
     } catch (err) {
       setMessages((prev) => [...prev, { role: "error", text: "Server error" }]);
@@ -122,11 +139,13 @@ export default function AgentSection({ agentType }) {
         ))}
       </div>
 
+      {agentType === "project" && projectIds.length > 0 && <ProjectCards ids={projectIds} />}
+
       <div className={styles.chatWrapper}>
         <div ref={chatRef} className={messages.length > 0 ? styles.chat : ""}>
           {messages.map((msg, idx) => (
             <div key={idx} className={msg.role === "user" ? styles.user : styles.agent}>
-              <strong>{msg.role === "user" ? "You:" : `AI (${msg.model || model}):`}</strong>
+              <strong>{msg.role === "user" ? "You: " : `AI (${msg.model || model}):`}</strong>
               {msg.role === "user" ? msg.text : <div dangerouslySetInnerHTML={{ __html: msg.text }} />}
             </div>
           ))}
