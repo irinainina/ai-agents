@@ -8,4 +8,3 @@ Werkzeug==2.3.7
 langdetect==1.0.9
 gunicorn
 ddgs==9.0.0
-langid==1.1.6

@@ -77,45 +77,6 @@ const agentConfig = {
     },
   },
 
-  project: {
-    ru: {
-      title: "Project Agent",
-      description: "Я ваш личный гид по проектам Halo Lab.",
-      examplesTitle: "Примеры вопросов, на которые я могу ответить:",
-      examples: [
-        "Я дизайнер, хочу увидеть интересные UI-решения",
-        "Покажите проект с редизайном старого сайта",
-        "Делали ли вы лендинг для SaaS-продукта?",
-      ],
-      placeholder: "Опишите какие проекты вас интересуют — я подберу похожие проекты...",
-      image: "/4.jpg",
-    },
-    uk: {
-      title: "Project Agent",
-      description: "Я ваш особистий гід про проєкти Halo Lab.",
-      examplesTitle: "Приклади запитань, на які я можу відповісти:",
-      examples: [
-        "Я дизайнер, хочу побачити цікаві UI-рішення",
-        "Покажіть проєкт із редизайном старого сайту",
-        "Чи робили ви лендинг для SaaS-продукту?",
-      ],
-      placeholder: "Опишіть, які проєкти вас цікавлять — я підберу схожі...",
-      image: "/4.jpg",
-    },
-    en: {
-      title: "Project Agent",
-      description: "I'm your personal guide to Halo Lab's projects.",
-      examplesTitle: "Examples of questions I can answer:",
-      examples: [
-        "I'm a designer, I want to see interesting UI solutions",
-        "Show me a project with a redesign of an old site",
-        "Have you made a landing page for a SaaS product?",
-      ],
-      placeholder: "Describe what projects you’re interested in — I’ll find similar ones...",
-      image: "/4.jpg",
-    },
-  },
-
   copywriter: {
     ru: {
       title: "Copywriter Agent",

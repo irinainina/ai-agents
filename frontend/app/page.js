@@ -12,7 +12,7 @@ export default function Home() {
 
       <AgentSection agentType="welcome" />
 
-      <AgentSection agentType="project" />
+      {/* <AgentSection agentType="project" /> */}
 
       <AgentSection agentType="copywriter" />
     </main>
