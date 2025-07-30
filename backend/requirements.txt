@@ -8,5 +8,5 @@ Werkzeug==2.3.7
 langdetect==1.0.9
 gunicorn
 ddgs==9.0.0
-torch==2.7.1 
-sentence-transformers==5.0.0
+scikit-learn==1.7.1
+numpy==2.3.1
