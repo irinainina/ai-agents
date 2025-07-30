@@ -4,6 +4,7 @@ from flask_cors import CORS
 from agents.welcome_agent import WelcomeAgent
 from agents.research_agent import ResearchAgent
 from agents.copywriter_agent import CopywriterAgent
+from agents.project_agent import ProjectAgent
 
 load_dotenv()
 
@@ -12,6 +13,7 @@ CORS(app)
 welcome_agent = WelcomeAgent()
 research_agent = ResearchAgent()
 copywriter_agent = CopywriterAgent()
+project_agent = ProjectAgent()
 
 @app.route('/api/welcome', methods=['POST'])
 def handle_welcome():
@@ -59,6 +61,24 @@ def copywriter_agent_endpoint():
     )
     
     return jsonify({'response': html_content})
+
+@app.route('/api/project', methods=['POST'])
+def handle_project():
+    data = request.json
+    user_message = data.get('message', '').strip()
+    model = data.get('model', 'llama3-8b-8192')
+    chat_history = data.get('chat_history', [])
+
+    result = project_agent.get_response(
+    query=user_message,
+    model=model,
+    chat_history=chat_history
+    )
+
+    return jsonify({
+        'response': result["text"],
+        'project_ids': result.get("project_ids", [])
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
