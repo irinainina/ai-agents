@@ -44,7 +44,7 @@ const agentConfig = {
       description: "Я могу рассказать о Halo Lab с учётом ваших интересов.",
       examplesTitle: "Примеры вопросов, на которые я могу ответить:",
       examples: [
-        "Я дизайнер. Как устроен ваш дизайн-процесс?",
+        "Я дизайнер. В чём ваша уникальность?",
         "Я разработчик. Какие современные технологии вы используете?",
         "Я потенциальный клиент. Почему мне стоит обратить на вас внимание?",
       ],
@@ -56,7 +56,7 @@ const agentConfig = {
       description: "Я можу розповісти про Halo Lab з урахуванням ваших інтересів.",
       examplesTitle: "Приклади запитань, на які я можу відповісти:",
       examples: [
-        "Я дизайнер. Як влаштований ваш дизайн-процес?",
+        "Я дизайнер. У чому ваша унікальність?",
         "Я розробник. Які сучасні технології ви використовуєте?",
         "Я потенційний клієнт. Чому мені варто звернути на вас увагу?",
       ],
@@ -68,7 +68,7 @@ const agentConfig = {
       description: "I can tell you about Halo Lab based on your interests.",
       examplesTitle: "Examples of questions I can answer:",
       examples: [
-        "I'm a designer. How does your design process work?",
+        "I'm a designer. What makes you unique?",
         "I am a developer. What modern technologies do you use?",
         "I'm a potential client. Why should I pay attention to you?",
       ],
