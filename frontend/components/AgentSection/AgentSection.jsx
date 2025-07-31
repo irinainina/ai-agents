@@ -26,6 +26,7 @@ export default function AgentSection({ agentType }) {
   const [messages, setMessages] = useState([]);
   const [lang, setLang] = useState("en");
   const [projectIds, setProjectIds] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const chatRef = useRef(null);
   const prevModelRef = useRef(model);
@@ -52,6 +53,9 @@ export default function AgentSection({ agentType }) {
     if (prevModelRef.current !== model || prevAgentTypeRef.current !== agentType) {
       setMessages([]);
       localStorage.removeItem(`${agentType}_history`);
+
+      setProjectIds([]);
+      localStorage.removeItem(`${agentType}_projects`);
     }
     prevModelRef.current = model;
     prevAgentTypeRef.current = agentType;
@@ -59,12 +63,14 @@ export default function AgentSection({ agentType }) {
 
   const sendMessage = async () => {
     const trimmed = input.trim();
-    if (!trimmed) return;
+    if (trimmed.length < 3) return;
 
     const chat_history = messages.map((msg) => ({
       role: msg.role === "agent" ? "assistant" : "user",
       content: msg.text,
     }));
+
+    setIsLoading(true);
 
     try {
       const res = await fetch(`${apiUrl}/api/${agentType}`, {
@@ -92,6 +98,7 @@ export default function AgentSection({ agentType }) {
     } catch (err) {
       setMessages((prev) => [...prev, { role: "error", text: "Server error" }]);
     } finally {
+      setIsLoading(false);
       setInput("");
     }
   };
@@ -163,8 +170,19 @@ export default function AgentSection({ agentType }) {
           onKeyDown={handleKeyDown}
           className={styles.input}
         />
-        <button onClick={sendMessage} className={styles.button}>
-          {config.send || "Send"}
+        <button
+          onClick={sendMessage}
+          className={`${styles.button} ${isLoading ? styles.loading : ""}`}
+          disabled={input.trim().length < 3 || isLoading}
+        >
+          {isLoading ? "Sending" : "Send"}
+          {isLoading && (
+            <span className={styles.dots}>
+              <span className={styles.dot}></span>
+              <span className={styles.dot}></span>
+              <span className={styles.dot}></span>
+            </span>
+          )}
         </button>
       </div>
     </section>
