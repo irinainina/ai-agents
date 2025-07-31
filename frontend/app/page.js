@@ -8,11 +8,11 @@ export default function Home() {
       <h1 className={styles.title}>AI Agents</h1>
       <AIModelSelector />
 
-      <AgentSection agentType="project" />
+      <AgentSection agentType="welcome" />
 
       <AgentSection agentType="research" />
-
-      <AgentSection agentType="welcome" />
+      
+      <AgentSection agentType="project" />
 
       <AgentSection agentType="copywriter" />
     </main>

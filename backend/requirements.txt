@@ -5,8 +5,8 @@ flask-cors==4.0.0
 requests==2.31.0
 python-dotenv==1.0.0
 Werkzeug==2.3.7
-langdetect==1.0.9
 gunicorn
 ddgs==9.0.0
 scikit-learn==1.7.1
 numpy==2.3.1
+lingua-language-detector==2.1.1
