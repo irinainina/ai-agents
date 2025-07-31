@@ -2,14 +2,15 @@ import os
 import json
 import requests
 from pathlib import Path
-from langdetect import detect, DetectorFactory
-
-DetectorFactory.seed = 0
+from lingua import Language, LanguageDetectorBuilder
 
 class WelcomeAgent:
     def __init__(self, default_model="llama3-8b-8192"):
         self.api_key = os.getenv("GROQ_API_KEY")
         self.default_model = default_model
+        self.language_detector = LanguageDetectorBuilder.from_languages(
+            Language.ENGLISH, Language.RUSSIAN, Language.UKRAINIAN
+        ).build()
         if not self.api_key:
             raise ValueError("GROQ_API_KEY environment variable not set")
         self.company_data = self._load_company_data()
@@ -26,7 +27,8 @@ class WelcomeAgent:
 
     def _detect_language(self, text):
         try:
-            return detect(text)
+            lang = self.language_detector.detect_language_of(text)
+            return lang.iso_code_639_1.name.lower()
         except:
             return "en"
 
@@ -41,17 +43,14 @@ class WelcomeAgent:
             f"Intro: {audience_data['intro']}"
         ]
         
-        # Add key points
         parts.append("\nKey Points:")
         for point in audience_data["key_points"]:
             parts.append(f"- {point}")
             
-        # Add services
         parts.append("\nServices:")
         for service in audience_data["services"]:
             parts.append(f"- {service}")
             
-        # Add achievements
         parts.append("\nAchievements:")
         for achievement in audience_data["achievements"]:
             parts.append(f"- {achievement}")
@@ -62,7 +61,6 @@ class WelcomeAgent:
         model = model or self.default_model
         lang = self._detect_language(query)
         
-        # Detect audience type from query
         audience_type = self._detect_audience_type(query, lang)
         audience_info = self._format_audience_info(audience_type)
         
@@ -121,7 +119,7 @@ class WelcomeAgent:
         payload = {
             "model": "llama3-8b-8192",
             "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.3,
+            "temperature": 0.6,
             "max_tokens": 15
         }
 
@@ -135,7 +133,6 @@ class WelcomeAgent:
             response.raise_for_status()
             result = response.json()["choices"][0]["message"]["content"].lower()
             
-            # Extract valid audience type
             for audience in ["client", "designer", "developer"]:
                 if audience in result:
                     return audience

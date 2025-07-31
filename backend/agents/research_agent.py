@@ -1,9 +1,7 @@
 import os
 import requests
 from ddgs import DDGS
-from langdetect import detect, DetectorFactory
-
-DetectorFactory.seed = 0
+from lingua import Language, LanguageDetectorBuilder
 
 AGENCY_DESCRIPTION = """
 We are a creative digital agency specializing in web design, development, SEO, testing, and product redesigns.
@@ -21,12 +19,16 @@ class ResearchAgent:
     def __init__(self, default_model="llama3-8b-8192"):
         self.api_key = os.getenv("GROQ_API_KEY")
         self.default_model = default_model
+        self.language_detector = LanguageDetectorBuilder.from_languages(
+            Language.ENGLISH, Language.RUSSIAN, Language.UKRAINIAN
+        ).build()
         if not self.api_key:
             raise ValueError("GROQ_API_KEY required")
-
+        
     def _detect_language(self, text):
         try:
-            return detect(text)
+            lang = self.language_detector.detect_language_of(text)
+            return lang.iso_code_639_1.name.lower()
         except:
             return "en"
 

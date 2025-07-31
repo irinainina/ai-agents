@@ -2,7 +2,7 @@ import os
 import json
 import requests
 from pathlib import Path
-from langdetect import detect, DetectorFactory
+from lingua import Language, LanguageDetectorBuilder
 import logging
 import numpy as np
 import pickle
@@ -12,12 +12,13 @@ from sklearn.metrics.pairwise import cosine_similarity
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DetectorFactory.seed = 0
-
 class ProjectAgent:
     def __init__(self, default_model="llama3-8b-8192"):
         self.default_model = default_model
         self.api_key = os.getenv("GROQ_API_KEY")
+        self.language_detector = LanguageDetectorBuilder.from_languages(
+            Language.ENGLISH, Language.RUSSIAN, Language.UKRAINIAN
+        ).build()
         if not self.api_key:
             raise ValueError("GROQ_API_KEY environment variable not set")
         
@@ -88,7 +89,8 @@ class ProjectAgent:
 
     def _detect_language(self, text):
         try:
-            return detect(text)
+            lang = self.language_detector.detect_language_of(text)
+            return lang.iso_code_639_1.name.lower()
         except:
             return "en"
 
