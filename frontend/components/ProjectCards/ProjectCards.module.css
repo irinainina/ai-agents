@@ -7,13 +7,15 @@
 }
 
 .card {
-  width: 100%;
-  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: calc(33% - 11px);
   background: white;
   border: 1px solid #eee;
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .card img {
@@ -31,9 +33,70 @@
   font-size: 14px;
   color: #555;
   margin: 6px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .card a {
   font-weight: bold;
   color: #0070f3;
+}
+
+.cardsMobile {
+  display: none;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .cards {
+    display: none;
+  }
+
+  .cardsMobile {
+    display: block;
+    position: relative;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 280px;
+    min-height: 396px;
+  }
+
+  .description {
+    display: none;
+  }
+}
+
+.cardsMobile :global(.swiper-button-next),
+.cardsMobile :global(.swiper-button-prev) {
+  color: black;
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.cardsMobile :global(.swiper-button-next) {
+  right: 0;
+}
+
+.cardsMobile :global(.swiper-button-prev) {
+  left: 0;
+}
+
+.cardsMobile :global(.swiper-button-next::after),
+.cardsMobile :global(.swiper-button-prev::after) {
+  font-size: 16px;
+}
+
+.cardsMobile :global(.swiper-slide) {
+  display: flex;
+  justify-content: center;
 }

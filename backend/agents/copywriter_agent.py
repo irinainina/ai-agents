@@ -1,7 +1,9 @@
 import os
 import requests
+import re
 from ddgs import DDGS
 from lingua import Language, LanguageDetectorBuilder
+from .get_images import get_images
 
 class CopywriterAgent:
     def __init__(self, default_model="llama3-8b-8192"):
@@ -41,40 +43,58 @@ class CopywriterAgent:
             for r in results
         )
 
-    def write_article(self, topic, model=None, chat_history=None):
-        model = model or self.default_model
+    def write_article(self, topic, length=5000, tone="neutral", audience="general public", chat_history=None):
         lang = self._detect_language(topic)
-        search_results = self._web_search(topic)
+        search_results = self._web_search(topic, max_results=5)
         formatted_results = self._format_results(search_results)
 
+        token_goal = int(length / 4)
+        max_tokens = min(8000, token_goal + 1000)
+
         system_prompt = (
-            f"**Task**: Write a comprehensive HTML article on: '{topic}'. "
-            f"**Language**: Write in {lang} (same as the topic language).\n"
-            "**Format Requirements**:\n"
-            "1. Use ONLY HTML5 semantic tags (<article>, <section>, <h1>-<h6>, <p>, <ul>/<ol>, <li>, <blockquote>)\n"
-            "2. ABSOLUTELY NO CSS styles, classes or inline styles\n"
-            "3. Include at least 3 sections with subtitles\n"
-            "4. Structure: Introduction, Main Content, Conclusion\n"
-            "5. Use web results as references but rewrite content originally\n\n"
-            f"**Reference Materials**:\n{formatted_results}"
+            f"You are a professional copywriter for a Gen-Z audience. Your goal is to entertain and educate."
+            f"**Objective**: Create an in-depth HTML article on '{topic}', using the user's language ({lang}).\n"
+            f"**Tone Requirements**: Adjust vocabulary, sentence structure, and mood to reflect a {tone} tone. This tone MUST be consistent throughout the article.\n"
+            f"**Audience Requirements**: Tailor the content's complexity, references, and examples to match a {audience} audience. Always speak directly to this group.\n"
+            f"NEVER include words or phrases in languages other than the user's language (detected as {lang}), except for terms.\n\n"
+            f"**Length**: STRICTLY {length} characters (±10%)\n"
+            f"**Token Limit**: {max_tokens} tokens\n\n"
+            "**Structure Requirements**:\n"
+            "1. Start with a summary paragraph.\n"
+            "2. Include 3–8 detailed sections with subtitles.\n"
+            "3. Use ONLY these HTML tags: <article>, <section>, <h1>-<h6>, <p>, <span>, <ul>, <ol>, <li>, <img>, <blockquote>.\n"
+            "4. For EACH image placeholder: Generate EXACTLY 3 English keywords, each a single word, separated by commas inside the comment:\n"
+            "   <!--IMAGE_KEYWORDS: keyword1, keyword2-->\n"
+            "   <!--IMAGE_HERE-->\n"
+            "   Keywords MUST be single words, with no more than 3 total.\n"
+            "5. Include 1 or 2 image placeholders (with keywords and image comments) in EACH detailed section.\n"
+            "6. End with a conclusion.\n\n"
+            f"**Reference Materials**:\n{formatted_results}\n"
+            "**Important**:\n"
+            "- Keywords MUST be in English\n"
+            "- Output ONLY the HTML article"
+        )
+
+        user_prompt = (
+            f"Generate a full HTML article about: {topic}.\n"
+            f"The total length must be approximately {length} characters (±10%).\n"
+            f"Use rich details, long sentences, and examples.\n"
+            f"Use <!--IMAGE_KEYWORDS: ... --> and <!--IMAGE_HERE--> for image placeholders.\n"
         )
 
         messages = []
-        
-        # Добавляем историю чата если есть
         if chat_history:
             messages.extend(chat_history)
-        
-        # Добавляем системный промпт и запрос
+
         messages.append({"role": "system", "content": system_prompt})
-        messages.append({"role": "user", "content": f"Generate HTML article about: {topic}"})
+        messages.append({"role": "user", "content": user_prompt})
 
         headers = {"Authorization": f"Bearer {self.api_key}"}
         payload = {
-            "model": model,
+            "model": self.default_model,
             "messages": messages,
-            "temperature": 0.4,
-            "max_tokens": 4096
+            "temperature": 0.8,
+            "max_tokens": max_tokens
         }
 
         try:
@@ -85,14 +105,46 @@ class CopywriterAgent:
                 timeout=45
             )
             response.raise_for_status()
-            return response.json()["choices"][0]["message"]["content"]
+            html = response.json()["choices"][0]["message"]["content"]
         except Exception as e:
-            error_html = (
+            return (
                 "<article>"
                 "<h1>Error Generating Content</h1>"
                 "<p>Sorry, I couldn't generate the article. Please try again later.</p>"
-                "<p>Technical details: " + str(e)[:200] + "</p>"
+                f"<p>Technical details: {str(e)[:200]}</p>"
                 "</article>"
             )
-            return error_html
+
+        return self._inject_images(html)
+
+    def _inject_images(self, html: str) -> str:        
+        pattern = r'<!--IMAGE_KEYWORDS:([^-]+?)-->\s*<!--IMAGE_HERE-->'
+        used_urls = set()
+        new_html = html
+       
+        matches = list(re.finditer(pattern, html, re.DOTALL))
         
+        for match in matches:
+            full_match = match.group(0)
+            keywords_str = match.group(1).strip()
+         
+            keywords = [kw.strip() for kw in keywords_str.split(',') if kw.strip()]
+            if not keywords:
+                continue
+                     
+            img_options = get_images(keywords, per_page=5) if keywords else []            
+           
+            selected_url = None
+            for url in img_options:
+                if url not in used_urls:
+                    selected_url = url
+                    used_urls.add(url)
+                    break
+           
+            if selected_url:
+                img_tag = f'<img src="{selected_url}" width="600" height="400" alt="{keywords_str}">'
+                new_html = new_html.replace(full_match, img_tag, 1)
+            else:                
+                new_html = new_html.replace(full_match, "<!--IMAGE_NOT_FOUND-->", 1)
+        
+        return new_html
