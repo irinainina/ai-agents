@@ -10,6 +10,7 @@ load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
 welcome_agent = WelcomeAgent()
 research_agent = ResearchAgent()
 copywriter_agent = CopywriterAgent()
@@ -46,21 +47,38 @@ def research_agent_endpoint():
 
 @app.route('/api/copywriter', methods=['POST'])
 def copywriter_agent_endpoint():
-    data = request.json
-    message = data.get('message', '').strip()
-    model = data.get('model', 'llama3-8b-8192')
-    chat_history = data.get('chat_history', [])
-    
-    if not message:
-        return jsonify({'error': 'Message is required'}), 400
+    try:
+        data = request.json
+        message = data.get('message', '').strip()
+        length = data.get('length', 'medium')
+        length_mapping = {
+            'short': 2000,
+            'medium': 5000,
+            'long': 10000
+        }
+        length_chars = length_mapping.get(length, 5000)
+        tone = data.get('tone', 'neutral')
+        audience = data.get('audience', 'general public')
+        chat_history = data.get('chat_history', [])
 
-    html_content = copywriter_agent.write_article(
-        topic=message,
-        model=model,
-        chat_history=chat_history
-    )
-    
-    return jsonify({'response': html_content})
+        if len(message) < 15:
+            return jsonify({'error': 'Topic must be at least 15 characters'}), 400
+
+        html_content = copywriter_agent.write_article(
+            topic=message,
+            length=length_chars,
+            tone=tone,
+            audience=audience,
+            chat_history=chat_history
+        )
+
+        if len(html_content) < length_chars * 0.5:
+            app.logger.warning(f"Short article generated: {len(html_content)}/{length_chars} chars")
+
+        return jsonify({'response': html_content})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/project', methods=['POST'])
 def handle_project():
@@ -70,9 +88,9 @@ def handle_project():
     chat_history = data.get('chat_history', [])
 
     result = project_agent.get_response(
-    query=user_message,
-    model=model,
-    chat_history=chat_history
+        query=user_message,
+        model=model,
+        chat_history=chat_history
     )
 
     return jsonify({
@@ -82,4 +100,3 @@ def handle_project():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
-    
