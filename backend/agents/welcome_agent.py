@@ -120,7 +120,7 @@ class WelcomeAgent:
             "3. Provide context or example where appropriate\n"
             "4. End with an OPEN question to continue dialogue\n"
             "5. Structure response using varied HTML5 semantic tags (<div>, <section>, <h3>-<h6>, <p>, <span>, <ul>/<ol>, <li>, <blockquote>, <strong> etc)\n"
-            "2. ABSOLUTELY NO CSS styles, classes or inline styles\n"
+            "6. Do NOT begin the response with any heading or title. Start directly with content.\n"
             
             "COMPANY FACTS:\n"
             "════════════════════════════\n"

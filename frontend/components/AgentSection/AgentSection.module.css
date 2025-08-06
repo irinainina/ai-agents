@@ -288,22 +288,21 @@
   border-color: #3b82f6;
 }
 
-.copywriterContent h1 {
+.agentContent h1 {
   font-size: 32px;
   margin: 16px 0;
 }
 
-.copywriterContent h2 {
+.agentContent h2 {
   font-size: 24px;
   margin: 12px 0;
 }
 
-.copywriterContent img {
+.agentContent img {
   display: block;
   width: 100%;
-  max-width: 600px;
+  max-width: 600px;  
+  height: auto;
   margin: 16px auto;
   border-radius: 16px;
-  object-fit: contain;
 }
-
