@@ -4,8 +4,8 @@ from ddgs import DDGS
 from lingua import Language, LanguageDetectorBuilder
 
 AGENCY_DESCRIPTION = """
-We are a creative digital agency specializing in web design, development, SEO, testing, and product redesigns.
-We use modern tools like React.js, Next.js, Vue, Svelte, Tailwind, Node.js, Express, PostgreSQL, MongoDB, Sanity, Prismic, and Webflow.
+Halo Lab are a creative digital agency specializing in web design, development, SEO, testing, and product redesigns.
+Halo Lab use modern tools like React.js, Next.js, Vue, Svelte, Tailwind, Node.js, Express, PostgreSQL, MongoDB, Sanity, Prismic, and Webflow.
 """
 
 TONE_INSTRUCTION = """
@@ -59,13 +59,16 @@ class ResearchAgent:
         formatted_results = self._format_results(search_results)
 
         system_prompt = (
+            f"You are a Halo Lab Researsh Specialist. Always reply in the user's language (detected: {query_language}).\n"
             f"{AGENCY_DESCRIPTION}\n\n"
             f"{TONE_INSTRUCTION}\n\n"
-            f"Always reply in the same language as the user's question. "
-            f"(Current query language: {query_language})\n\n"
+            f"NEVER include words or phrases in languages other than the user's language (detected as {query_language}), except for terms."
             f"Use web results if they are relevant.\n"
             f"Be clear, helpful, and structured.\n\n"
             f"Web results:\n{formatted_results}"
+            f"End with an OPEN question to continue dialogue\n"
+            f"Structure response using varied HTML5 semantic tags (<div>, <section>, <h3>-<h6>, <p>, <span>, <ul>/<ol>, <li>, <blockquote>, <strong> etc)\n"
+            f"Do NOT begin the response with any heading or title. Start directly with content.\n"
         )
 
         messages = [

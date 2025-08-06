@@ -25,7 +25,6 @@ export default function AgentSection({ agentType }) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [lang, setLang] = useState("en");
-  const [projectIds, setProjectIds] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [length, setLength] = useState("short");
   const [tone, setTone] = useState("neutral");
@@ -45,18 +44,12 @@ export default function AgentSection({ agentType }) {
     if (savedHistory && savedHistory !== "undefined") {
       setMessages(JSON.parse(savedHistory));
     }
-    const savedProjects = localStorage.getItem(`${agentType}_projects`);
-    if (agentType === "project" && savedProjects && savedProjects !== "undefined") {
-      setProjectIds(JSON.parse(savedProjects));
-    }
   }, [agentType]);
 
   useEffect(() => {
     if (prevModelRef.current !== model || prevAgentTypeRef.current !== agentType) {
       setMessages([]);
       localStorage.removeItem(`${agentType}_history`);
-      setProjectIds([]);
-      localStorage.removeItem(`${agentType}_projects`);
     }
     prevModelRef.current = model;
     prevAgentTypeRef.current = agentType;
@@ -65,12 +58,12 @@ export default function AgentSection({ agentType }) {
   const sendMessage = async () => {
     const trimmed = input.trim();
 
-    if (trimmed.length < 15) {
+    if (trimmed.length < 8) {
       setMessages((prev) => [
         ...prev,
         {
           role: "error",
-          text: "Topic must be at least 15 characters",
+          text: "Topic must be at least 8 characters",
         },
       ]);
       return;
@@ -111,17 +104,20 @@ export default function AgentSection({ agentType }) {
       const data = await res.json();
 
       if (data?.response) {
-        const updated = [...messages, { role: "user", text: trimmed }, { role: "agent", text: data.response }];
-        setMessages(updated);
-        localStorage.setItem(`${agentType}_history`, JSON.stringify(updated));
+        const userMessage = { role: "user", text: trimmed };
+        const agentMessage = {
+          role: "agent",
+          text: data.response,
+          model,
+        };
 
         if (agentType === "project" && Array.isArray(data.project_ids)) {
-          setProjectIds(data.project_ids);
-          localStorage.setItem(`${agentType}_projects`, JSON.stringify(data.project_ids));
-        } else {
-          setProjectIds([]);
-          localStorage.removeItem(`${agentType}_projects`);
+          agentMessage.projectIds = data.project_ids;
         }
+
+        const updated = [...messages, userMessage, agentMessage];
+        setMessages(updated);
+        localStorage.setItem(`${agentType}_history`, JSON.stringify(updated));
       } else if (data?.error) {
         setMessages((prev) => [...prev, { role: "error", text: data.error }]);
       }
@@ -133,16 +129,13 @@ export default function AgentSection({ agentType }) {
     }
   };
 
-
   const handleKeyDown = (e) => {
     if (e.key === "Enter") sendMessage();
   };
 
   const handleNewChat = () => {
     setMessages([]);
-    setProjectIds([]);
     localStorage.removeItem(`${agentType}_history`);
-    localStorage.removeItem(`${agentType}_projects`);
   };
 
   const handleCopy = () => {
@@ -154,7 +147,6 @@ export default function AgentSection({ agentType }) {
       });
     }
   };
-
 
   useEffect(() => {
     if (chatRef.current) {
@@ -221,21 +213,19 @@ export default function AgentSection({ agentType }) {
         </div>
       )}
 
-      {agentType === "project" && projectIds.length > 0 && <ProjectCards ids={projectIds} />}
-
       <div className={styles.chatWrapper}>
         <div ref={chatRef} className={messages.length > 0 ? styles.chat : ""}>
           {messages.map((msg, idx) => (
             <div key={idx} className={msg.role === "user" ? styles.user : styles.agent}>
               <strong>{msg.role === "user" ? "You: " : `AI (${msg.model || model}):`}</strong>
+              {agentType === "project" && Array.isArray(msg.projectIds) && msg.projectIds.length > 0 && (
+                <ProjectCards ids={msg.projectIds} />
+              )}
               {msg.role === "user" ? (
                 msg.text
               ) : (
                 <>
-                  <div
-                    className={agentType === "copywriter" ? styles.copywriterContent : ""}
-                    dangerouslySetInnerHTML={{ __html: msg.text }}
-                  />
+                  <div className={styles.agentContent} dangerouslySetInnerHTML={{ __html: msg.text }} />
                   {agentType === "copywriter" && (
                     <button onClick={handleCopy} className={styles.copyButton}>
                       {copied ? "Copied!" : "Copy Code"}

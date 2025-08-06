@@ -3,7 +3,7 @@
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 24px;
+  margin: 24px 0;
 }
 
 .card {
@@ -47,7 +47,7 @@
 
 .cardsMobile {
   display: none;
-  margin-bottom: 24px;
+  margin: 24px 0;
 }
 
 @media (max-width: 1024px) {
