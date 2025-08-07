@@ -71,6 +71,16 @@ export default function AgentSection({ agentType }) {
 
     setIsLoading(true);
 
+    let shownProjectIds = [];
+
+    if (agentType === "project") {
+      for (const msg of messages) {
+        if (msg.role === "agent" && Array.isArray(msg.projectIds)) {
+          shownProjectIds.push(...msg.projectIds);
+        }
+      }
+    }
+
     const body =
       agentType === "copywriter"
         ? {
@@ -92,6 +102,9 @@ export default function AgentSection({ agentType }) {
               role: msg.role === "agent" ? "assistant" : "user",
               content: msg.text,
             })),
+            ...(agentType === "project" && {
+              shown_project_ids: shownProjectIds,
+            }),
           };
 
     try {

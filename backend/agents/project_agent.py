@@ -21,7 +21,7 @@ class ProjectAgent:
         ).build()
         if not self.api_key:
             raise ValueError("GROQ_API_KEY environment variable not set")
-        
+
         self.projects = self._load_projects()
         self.vectorizer, self.tfidf_matrix = self._load_or_generate_tfidf()
 
@@ -46,7 +46,7 @@ class ProjectAgent:
 
     def _load_or_generate_tfidf(self):
         cache_path = self._tfidf_cache_path()
-        
+
         if cache_path.exists():
             try:
                 with open(cache_path, 'rb') as f:
@@ -55,7 +55,7 @@ class ProjectAgent:
                 return cache_data['vectorizer'], cache_data['matrix']
             except Exception as e:
                 logger.warning(f"Failed to load TF-IDF cache: {e}")
-        
+
         return self._generate_and_cache_tfidf(cache_path)
 
     def _generate_and_cache_tfidf(self, cache_path):
@@ -67,23 +67,23 @@ class ProjectAgent:
             f"{' '.join(p['services'])} {' '.join(p['keywords'])}"
             for p in self.projects
         ]
-                
+
         vectorizer = TfidfVectorizer(
             max_features=500,
             stop_words='english',
             min_df=1
         )
-       
+
         tfidf_matrix = vectorizer.fit_transform(texts)
-        
+
         cache_data = {
             'vectorizer': vectorizer,
             'matrix': tfidf_matrix
         }
-        
+
         with open(cache_path, 'wb') as f:
             pickle.dump(cache_data, f)
-        
+
         logger.info(f"Generated and cached TF-IDF at {cache_path}")
         return vectorizer, tfidf_matrix
 
@@ -94,16 +94,24 @@ class ProjectAgent:
         except:
             return "en"
 
-    def _find_similar_projects(self, query, top_n=3):
+    def _find_similar_projects(self, query, top_n=3, exclude_ids=None):
+        exclude_ids = set(exclude_ids or [])
         if not self.projects or self.tfidf_matrix is None:
             return []
 
         query_vec = self.vectorizer.transform([query])
-       
         cos_similarities = cosine_similarity(query_vec, self.tfidf_matrix).flatten()
-        
-        top_indices = np.argsort(cos_similarities)[-top_n:][::-1]
-        return [self.projects[i] for i in top_indices]
+        sorted_indices = np.argsort(cos_similarities)[::-1]
+
+        selected = []
+        for idx in sorted_indices:
+            project = self.projects[idx]
+            if project["id"] not in exclude_ids:
+                selected.append(project)
+            if len(selected) == top_n:
+                break
+
+        return selected
 
     def _format_project_promo(self, projects, lang="en"):
         if not projects:
@@ -123,10 +131,12 @@ class ProjectAgent:
             )
         return "\n\n".join(result)
 
-    def get_response(self, query, model=None, chat_history=None):
+    def get_response(self, query, model=None, chat_history=None, shown_project_ids=None):
         model = model or self.default_model
         lang = self._detect_language(query)
-        similar_projects = self._find_similar_projects(query)
+        shown_project_ids = shown_project_ids or []
+
+        similar_projects = self._find_similar_projects(query, exclude_ids=shown_project_ids)
         promo_text = self._format_project_promo(similar_projects, lang)
 
         system_prompt = (
@@ -134,14 +144,19 @@ class ProjectAgent:
             f"Translate all content from English to the user's language (detected: {lang}) when responding, except for terms.\n"
             f"Your main goal is to showcase our relevant projects to convince the client we have expertise in their domain.\n\n"
             "Key instructions:\n"
-            "1. Start with a confident statement about our experience\n"
-            "2. Present 2-3 most relevant projects\n"
-            "3. For each project: highlight similarities with client's needs\n"
+            "1. Start with a confident, warm statement about our experience\n"
+            "2. Present 3 most relevant projects\n"
+            "3. For each project:\n"
+            "– Highlight the problem the client faced and what they wanted to achieve\n"
+            "– Show how our solution helped them reach their goals\n"
+            "– Emphasize business outcomes and user benefits\n"
+            "– Use clear, human language — avoid dry facts, but do not invent details\n"
             "4. Focus on outcomes and benefits, not just features\n"
-            "5. End with a call-to-action for next steps\n\n"
+            "5. Include a call-to-action for next steps\n"
+            "6. End with an open question to continue the dialogue\n\n"
             f"CLIENT'S QUERY: {query}\n\n"
-            f"RELEVANT PROJECTS:\n{promo_text}"
-            f"NEVER include words or phrases in languages other than the user's language (detected as {lang}), except for terms.\n\n"
+            f"RELEVANT PROJECTS:\n{promo_text}\n\n"
+            f"NEVER include words or phrases in languages other than the user's language (detected as {lang}), except for terms.\n"
             f"Structure response using varied HTML5 semantic tags (<div>, <section>, <h3>-<h6>, <p>, <span>, <ul>/<ol>, <li>, <blockquote>, <strong> etc)\n"
             f"Do NOT begin the response with any heading or title. Start directly with content.\n"
         )
@@ -175,10 +190,11 @@ class ProjectAgent:
             }
         except requests.exceptions.RequestException as e:
             logger.error(f"API request failed: {str(e)}")
-            return "I'm having trouble accessing our project database at the moment. Please try again later."
+            return {"text": "I'm having trouble accessing our project database at the moment. Please try again later."}
         except Exception as e:
             logger.error(f"Unexpected error: {str(e)}")
-            return "An unexpected error occurred while processing your request."
+            return {"text": "An unexpected error occurred while processing your request."}
+
 
 
 # import os
