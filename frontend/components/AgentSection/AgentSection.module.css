@@ -298,6 +298,18 @@
   margin: 12px 0;
 }
 
+.agentContent h3 {
+  font-size: 20px;
+  margin: 8px 0;
+}
+
+.agentContent h4,
+.agentContent h5,
+.agentContent h6 {
+  font-size: 18px;
+  margin: 6px 0;
+}
+
 .agentContent img {
   display: block;
   width: 100%;

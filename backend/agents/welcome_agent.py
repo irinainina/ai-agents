@@ -110,7 +110,7 @@ class WelcomeAgent:
             "CONTENT RULES:\n"
             "1. Prioritize these company facts for {audience_type}:\n"
             f"{self._format_key_facts(audience_type)}\n"
-            "2. Include 2-4 most relevant facts per response\n"
+            "2. Include 2-3 most relevant facts per response, is possible.\n"
             "3. Do not invent facts about Halo Lab, but feel free to engage with user's input using general knowledge and a friendly tone.\n"
             "4. Keep responses concise\n\n"
             

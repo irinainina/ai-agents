@@ -86,17 +86,20 @@ def handle_project():
     user_message = data.get('message', '').strip()
     model = data.get('model', 'llama3-8b-8192')
     chat_history = data.get('chat_history', [])
+    shown_project_ids = data.get('shown_project_ids', [])
 
     result = project_agent.get_response(
         query=user_message,
         model=model,
-        chat_history=chat_history
+        chat_history=chat_history,
+        shown_project_ids=shown_project_ids
     )
 
     return jsonify({
         'response': result["text"],
         'project_ids': result.get("project_ids", [])
     })
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
